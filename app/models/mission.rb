@@ -6,7 +6,7 @@ class Mission < ApplicationRecord
 
   enum :status, {
     assigned: "assigned",
-    in_process: "in_process",
-    complete: "complete"
+    in_process: "in_progress",
+    complete: "completed"
   }
 end
