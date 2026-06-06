@@ -7,36 +7,48 @@ class Quest3AccessGateController < ApplicationController
   # Disable CSRF verification here so the probe can validate route/controller logic.
   skip_forgery_protection
 
+  before_action :prepare_sum, only: [ :clearance ]
+  after_action :set_header, only: [ :clearance ]
+
+  before_action :extract_token, only: [ :granted ]
+  after_action :set_header_granted, only: [ :granted ]
 
   # Register callbacks here.
 
 
   def ping
-    render plain: ""
+    render plain: "ACCESSGATE PING OK"
   end
 
   def scan
-    render plain: ""
+    agent = params[:agent]
+    sector = params[:sector]
+
+    render plain: "SCAN RESULT: #{agent} -> sector #{sector}"
   end
 
   def power
-    render plain: ""
+    render plain: "POWER TOTAL: #{params[:current].to_i + params[:boost].to_i}"
   end
 
   def stale_logs
-    render plain: ""
+    render plain: "STALE LOGS CLEARED: #{params[:count]}"
   end
 
   def clearance
-    render plain: ""
+    render plain: "CLEARANCE TOTAL: #{@sum}"
   end
 
   def verify
-    render plain: ""
+    if params[:token].start_with?("alpha")
+      redirect_to action: :granted, token: params[:token]
+    else
+      redirect_to action: :denied, token: params[:token]
+    end
   end
 
   def granted
-    render plain: ""
+    render plain: "TOKEN ACCEPTED: #{@token}"
   end
 
   def denied
@@ -45,7 +57,19 @@ class Quest3AccessGateController < ApplicationController
 
   private
 
+  def prepare_sum
+    @sum = params[:level].to_i + params[:boost].to_i
+  end
 
-  # Implement callbacks here
-  # response.set_header("X-Access-Gate-Trace", "") may be helpful
+  def set_header
+    response.set_header("X-Access-Gate-Trace", "CLEAREANCE_GRANTED")
+  end
+
+  def extract_token
+    @token = params[:token]
+  end
+
+  def set_header_granted
+    response.set_header("X-Access-Gate-Trace", "token_checked")
+  end
 end
